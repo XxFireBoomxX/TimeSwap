@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from models import db
 from routes.auth import auth_bp
 from routes.tasks import tasks_bp
+from routes.profile import profile_bp
 
 from config import Config
 
@@ -18,6 +19,7 @@ jwt = JWTManager(app)
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(tasks_bp)
+app.register_blueprint(profile_bp) 
 
 if __name__ == '__main__':
     with app.app_context():
