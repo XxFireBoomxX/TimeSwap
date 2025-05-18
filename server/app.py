@@ -11,7 +11,11 @@ from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
 
-CORS(app)
+CORS(
+    app,
+    resources={r"/*": {"origins": app.config["FRONTEND_ORIGIN"]}},
+    supports_credentials=True
+)
 
 db.init_app(app)
 
@@ -20,6 +24,10 @@ jwt = JWTManager(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(tasks_bp)
 app.register_blueprint(profile_bp) 
+
+print("ВСИЧКИ ROUTE-ОВЕ:")
+for rule in app.url_map.iter_rules():
+    print(rule)
 
 if __name__ == '__main__':
     with app.app_context():

@@ -8,10 +8,9 @@ from datetime import datetime
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 # ----- GET ALL TASKS -----
-@tasks_bp.route("/", methods=["GET"])
+@tasks_bp.route("/", methods=["GET"], strict_slashes=False)
 @jwt_required(optional=True)
 def get_tasks():
-    """Return all tasks (for all users)."""
     tasks = Task.query.all()
     data = []
     for t in tasks:
@@ -25,14 +24,13 @@ def get_tasks():
             "created_by": t.created_by,
             "claimed_by": t.claimed_by,
         })
-    return jsonify(data), 200
+    return jsonify({"tasks": data}), 200
 
 # ----- GET MY TASKS -----
-@tasks_bp.route("/my", methods=["GET"])
+@tasks_bp.route("/my", methods=["GET"], strict_slashes=False)
 @jwt_required()
 def get_my_tasks():
-    """Return tasks created by the logged-in user."""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     tasks = Task.query.filter_by(created_by=user_id).all()
     data = [{
         "id": t.id,
@@ -44,14 +42,13 @@ def get_my_tasks():
         "created_by": t.created_by,
         "claimed_by": t.claimed_by,
     } for t in tasks]
-    return jsonify(data), 200
+    return jsonify({"tasks": data}), 200
 
 # ----- GET CLAIMED TASKS -----
-@tasks_bp.route("/claimed", methods=["GET"])
+@tasks_bp.route("/claimed", methods=["GET"], strict_slashes=False)
 @jwt_required()
 def get_claimed_tasks():
-    """Return tasks claimed by the logged-in user."""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     tasks = Task.query.filter_by(claimed_by=user_id).all()
     data = [{
         "id": t.id,
@@ -63,15 +60,14 @@ def get_claimed_tasks():
         "created_by": t.created_by,
         "claimed_by": t.claimed_by,
     } for t in tasks]
-    return jsonify(data), 200
+    return jsonify({"tasks": data}), 200
 
 # ----- CREATE TASK -----
-@tasks_bp.route("/", methods=["POST"])
+@tasks_bp.route("/", methods=["POST"], strict_slashes=False)
 @jwt_required()
 def create_task():
-    """Create a new task."""
     data = request.get_json()
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     deadline = datetime.fromisoformat(data["deadline"])
     task = Task(
         title=data["title"],
@@ -86,10 +82,9 @@ def create_task():
     return jsonify({"message": "Task created successfully!", "task_id": task.id}), 201
 
 # ----- GET TASK BY ID -----
-@tasks_bp.route("/<int:task_id>", methods=["GET"])
+@tasks_bp.route("/<int:task_id>", methods=["GET"], strict_slashes=False)
 @jwt_required(optional=True)
 def get_task(task_id):
-    """Return task by its ID."""
     task = Task.query.get_or_404(task_id)
     return jsonify({
         "id": task.id,
@@ -103,13 +98,12 @@ def get_task(task_id):
     }), 200
 
 # ----- UPDATE TASK -----
-@tasks_bp.route("/<int:task_id>", methods=["PUT"])
+@tasks_bp.route("/<int:task_id>", methods=["PUT"], strict_slashes=False)
 @jwt_required()
 def update_task(task_id):
-    """Update an existing task. Only the creator can update."""
     task = Task.query.get_or_404(task_id)
-    user_id = get_jwt_identity()
-    if task.created_by != user_id:
+    user_id = int(get_jwt_identity())
+    if int(task.created_by) != user_id:
         return jsonify({"error": "Only the creator can update this task!"}), 403
 
     data = request.get_json()
@@ -123,39 +117,36 @@ def update_task(task_id):
     return jsonify({"message": "Task updated successfully."}), 200
 
 # ----- DELETE TASK -----
-@tasks_bp.route("/<int:task_id>", methods=["DELETE"])
+@tasks_bp.route("/<int:task_id>", methods=["DELETE"], strict_slashes=False)
 @jwt_required()
 def delete_task(task_id):
-    """Delete a task. Only the creator can delete."""
     task = Task.query.get_or_404(task_id)
-    user_id = get_jwt_identity()
-    if task.created_by != user_id:
+    user_id = int(get_jwt_identity())
+    if int(task.created_by) != user_id:
         return jsonify({"error": "Only the creator can delete this task!"}), 403
     db.session.delete(task)
     db.session.commit()
     return jsonify({"message": "Task deleted successfully."}), 200
 
 # ----- CLAIM TASK -----
-@tasks_bp.route("/<int:task_id>/claim", methods=["POST"])
+@tasks_bp.route("/<int:task_id>/claim", methods=["POST"], strict_slashes=False)
 @jwt_required()
 def claim_task(task_id):
-    """Claim a task (set yourself as the performer)."""
     task = Task.query.get_or_404(task_id)
     if task.status != "open":
         return jsonify({"error": "Task is already claimed or completed!"}), 400
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     task.claimed_by = user_id
     task.status = "claimed"
     db.session.commit()
     return jsonify({"message": "Task successfully claimed!"}), 200
 
 # ----- COMPLETE TASK -----
-@tasks_bp.route("/<int:task_id>/complete", methods=["POST"])
+@tasks_bp.route("/<int:task_id>/complete", methods=["POST"], strict_slashes=False)
 @jwt_required()
 def complete_task(task_id):
-    """Complete a claimed task. Only the claimer can complete."""
     task = Task.query.get_or_404(task_id)
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     if task.claimed_by != user_id:
         return jsonify({"error": "Only the claimer can complete this task!"}), 403
     task.status = "completed"
@@ -163,7 +154,7 @@ def complete_task(task_id):
     return jsonify({"message": "Task marked as completed!"}), 200
 
 # ----- SEARCH TASK -----
-@tasks_bp.route("/search", methods=["GET"])
+@tasks_bp.route("/search", methods=["GET"], strict_slashes=False)
 @jwt_required(optional=True)
 def search_tasks():
     status = request.args.get("status")
@@ -214,4 +205,4 @@ def search_tasks():
             "claimed_by": t.claimed_by,
         })
 
-    return jsonify(result), 200
+    return jsonify({"tasks": result}), 200

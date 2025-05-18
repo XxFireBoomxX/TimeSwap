@@ -8,3 +8,4 @@ class Config:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = 'sqlite:///timeswap.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")

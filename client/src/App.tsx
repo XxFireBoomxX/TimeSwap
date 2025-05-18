@@ -1,22 +1,40 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+// src/App.tsx
+
+import { useState } from 'react'
 import Login from './pages/Login'
-import Home from './pages/Home'
-import './App.css'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <div className="App">
-        <header className="text-center">
-          <h1>TimeSwap</h1>
-          <p>Платформата за размяна на задачи между студенти</p>
-        </header>
+  const [token, setToken] = useState<string | null>(null)
+  const [showRegister, setShowRegister] = useState(false)
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+  // При реално приложение пази токена в localStorage и валидирай!
+  const handleLogin = (token: string) => {
+    setToken(token)
+  }
+
+  const handleLogout = () => {
+    setToken(null)
+  }
+
+  return (
+    <div className="fullscreen-center">
+      {!token ? (
+        showRegister ? (
+          <Register
+            onSuccessLogin={handleLogin}
+            onSwitchToLogin={() => setShowRegister(false)}
+          />
+        ) : (
+          <Login
+            onSuccessLogin={handleLogin}
+            onSwitchToRegister={() => setShowRegister(true)}
+          />
+        )
+      ) : (
+        <Dashboard token={token} onLogout={handleLogout} />
+      )}
+    </div>
   )
 }

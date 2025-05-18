@@ -1,58 +1,61 @@
-import '../pages/Login.css'
+import React from 'react'
+import '../SharedStyles.css';
 
-const tasks = [
-  { id: 1, title: 'Изчисти трона 🏰', reward: 10, status: 'open' },
-  { id: 2, title: 'Поръчай армия на наемници', reward: 20, status: 'in progress' },
-  { id: 3, title: 'Поръчай вечеря за Алина', reward: 999, status: 'done' }
-]
+interface HomeProps {
+  onGoToLogin: () => void
+  onGoToRegister: () => void
+}
 
-export default function Home() {
+export default function Home({ onGoToLogin, onGoToRegister }: HomeProps) {
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f4f0fb',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div className="login-container" style={{ width: 410, maxWidth: '96vw', alignItems: 'stretch' }}>
-        <h2>👑 Твоят Dashboard</h2>
-        <div style={{ marginBottom: 20, color: "#7e57c2", fontWeight: 600, textAlign: 'center' }}>
-          Добре дошъл, Принце! Ето ги задачите.
-        </div>
-        <ul style={{ padding: 0, margin: 0, listStyle: "none" }}>
-          {tasks.map(task => (
-            <li key={task.id} style={{
-              background: "#faf8ff",
-              border: "1.3px solid #cbbde2",
-              borderRadius: 8,
-              padding: "14px 16px",
-              marginBottom: 14,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              boxShadow: "0 1px 6px 0 rgba(140, 54, 200, 0.06)"
-            }}>
-              <div>
-                <div style={{ fontWeight: 600, color: "#8e24aa" }}>{task.title}</div>
-                <div style={{ fontSize: 13, color: "#b39ddb" }}>Статус: {task.status}</div>
-              </div>
-              <div style={{
-                fontWeight: 600,
-                color: "#fff",
-                background: "#8e24aa",
-                borderRadius: 7,
-                padding: "6px 14px",
-                fontSize: 15,
-                minWidth: 54,
-                textAlign: 'center'
-              }}>
-                +{task.reward} 💰
-              </div>
-            </li>
-          ))}
-        </ul>
-        <button style={{ marginTop: 8 }}>Добави нова задача</button>
+    <div className="page-container" style={{ maxWidth: 400 }}>
+      <h2>Добре дошъл в TimeSwap!</h2>
+      <p style={{
+        marginBottom: 30,
+        color: '#8e24aa',
+        fontWeight: 500,
+        textAlign: 'center'
+      }}>
+        Платформа за размяна на задачи, време и услуги.<br />
+        Влез или си създай акаунт, за да започнеш.
+      </p>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <button
+          className="main-btn"
+          onClick={onGoToLogin}
+          style={{
+            width: '100%',
+            padding: '12px 0',
+            background: '#8e24aa',
+            color: '#fff',
+            fontWeight: 600,
+            border: 'none',
+            borderRadius: 8,
+            fontSize: '1.08rem',
+            letterSpacing: '1px',
+            boxShadow: '0 1px 8px 0 rgba(87, 33, 135, 0.08)'
+          }}
+        >
+          Вход
+        </button>
+        <button
+          className="main-btn"
+          onClick={onGoToRegister}
+          style={{
+            width: '100%',
+            padding: '12px 0',
+            background: '#232339',
+            color: '#b39ddb',
+            fontWeight: 600,
+            border: 'none',
+            borderRadius: 8,
+            fontSize: '1.08rem',
+            letterSpacing: '1px',
+            boxShadow: '0 1px 8px 0 rgba(87, 33, 135, 0.04)'
+          }}
+        >
+          Регистрация
+        </button>
       </div>
     </div>
   )
