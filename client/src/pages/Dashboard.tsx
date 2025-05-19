@@ -12,7 +12,12 @@ interface Task {
   created_by: number
   claimed_by: number | null
 }
-
+interface LikeNotification {
+  task_id: number
+  task_title: string
+  liked_by_id: number
+  liked_by_username: string
+}
 interface Props {
   token: string
   onLogout: () => void
@@ -35,6 +40,11 @@ export default function Dashboard({ token, onLogout }: Props) {
   const [processing, setProcessing] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
+  // Notifications
+  const [notifications, setNotifications] = useState<LikeNotification[]>([])
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifInfo, setNotifInfo] = useState('')
+
   // Fetch tasks
   const fetchTasks = () => {
     setLoading(true)
@@ -44,14 +54,40 @@ export default function Dashboard({ token, onLogout }: Props) {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => {
-        const data = res.data
+        const data = res.data as { tasks: Task[] }
         setTasks(Array.isArray(data) ? data : data.tasks || [])
+        setLoading(false)
       })
-      .catch(() => setError('Грешка при зареждане на задачите'))
-      .finally(() => setLoading(false))
+      .catch(() => {
+        setError('Грешка при зареждане на задачите')
+        setLoading(false)
+      })
   }
 
-  useEffect(fetchTasks, [token])
+  // Fetch notifications (likes към моите задачи)
+  const fetchNotifications = () => {
+    setNotifLoading(true)
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/like/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        setNotifications((res.data as { notifications: LikeNotification[] }).notifications || [])
+        setNotifLoading(false)
+      })
+      .catch(() => {
+        setNotifInfo('Грешка при зареждане на известията.')
+        setNotifLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    fetchTasks()
+  }, [token]);
+
+  useEffect(() => {
+    fetchNotifications()
+  }, [token]);
 
   // Handle form change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -142,7 +178,27 @@ export default function Dashboard({ token, onLogout }: Props) {
     setShowForm(true)
   }
 
-  // Claim task
+  // Match (потвърждаваш кой ще изпълнява задача)
+  const handleMatch = async (task_id: number, user_id: number) => {
+    setNotifInfo('')
+    setNotifLoading(true)
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/match/confirm`,
+        { task_id, user_id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setNotifInfo('Успешно създаден match! Задачата е възложена.')
+      fetchTasks()
+      fetchNotifications()
+    } catch (e: any) {
+      setNotifInfo(e?.response?.data?.error || 'Грешка при match.')
+    } finally {
+      setNotifLoading(false)
+    }
+  }
+
+  // Claim task — вече не трябва да се ползва, но оставям ако не си мигрирал всичко!
   const handleClaim = async (id: number) => {
     setProcessing(true)
     try {
@@ -178,6 +234,33 @@ export default function Dashboard({ token, onLogout }: Props) {
 
   return (
     <div className="page-container dashboard-container">
+      {/* --- Известия --- */}
+      <div style={{ width: "100%", marginBottom: 18, borderRadius: 10, background: "#232339", boxShadow: "0 2px 16px 0 rgba(87,33,135,0.06)", padding: 12 }}>
+        <strong style={{ color: "#b39ddb" }}>Известия: харесани задачи</strong>
+        {notifLoading ? (
+          <div className="info">Зареждане...</div>
+        ) : notifications.length === 0 ? (
+          <div className="info">Никой още не е харесал твоите задачи... 😢</div>
+        ) : (
+          <ul style={{ padding: 0, margin: 0 }}>
+            {notifications.map((n, i) => (
+              <li key={i} style={{ listStyle: "none", margin: "8px 0", borderBottom: "1px solid #3c2a55", paddingBottom: 6 }}>
+                <span style={{ color: "#fff", fontWeight: 500 }}>{n.liked_by_username}</span>
+                {" "}иска да изпълни <b style={{ color: "#b39ddb" }}>{n.task_title}</b>
+                <button
+                  className="main-btn"
+                  style={{ marginLeft: 12, padding: "5px 14px", fontSize: 13 }}
+                  onClick={() => handleMatch(n.task_id, n.liked_by_id)}
+                  disabled={notifLoading}
+                >Match!</button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {notifInfo && <div className="info" style={{ marginTop: 10 }}>{notifInfo}</div>}
+      </div>
+
+      {/* Старото ти съдържание */}
       <div className="header-row">
         <h2 className="page-title">Твоите задачи</h2>
         <div style={{ display: "flex", gap: 12 }}>
@@ -194,7 +277,6 @@ export default function Dashboard({ token, onLogout }: Props) {
         </div>
       </div>
 
-      {/* Accordion/Modal/Dropdown форма */}
       {showForm && (
         <form onSubmit={handleSubmit} className="task-form">
           <h4 className="task-form-title">{editId ? 'Редакция на задача' : 'Нова задача'}</h4>
@@ -210,7 +292,6 @@ export default function Dashboard({ token, onLogout }: Props) {
         </form>
       )}
 
-      {/* Списък със задачите */}
       {loading ? (
         <p className="info">Зареждане...</p>
       ) : error ? (
@@ -233,6 +314,7 @@ export default function Dashboard({ token, onLogout }: Props) {
                 <div className="task-actions">
                   <button onClick={() => handleEdit(task)} disabled={processing} className="edit-btn">Редакция</button>
                   <button onClick={() => handleDelete(task.id)} disabled={processing} className="delete-btn">Изтрий</button>
+                  {/* Оставям claim само ако искаш да не счупиш стария flow! */}
                   {task.status === "open" && (
                     <button onClick={() => handleClaim(task.id)} disabled={processing} className="claim-btn">Claim</button>
                   )}

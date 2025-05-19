@@ -5,6 +5,9 @@ from models import db
 from routes.auth import auth_bp
 from routes.tasks import tasks_bp
 from routes.profile import profile_bp
+from routes.like import like_bp
+from routes.match import match_bp
+from routes.wallet import wallet_bp
 
 from config import Config
 
@@ -24,10 +27,9 @@ jwt = JWTManager(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(tasks_bp)
 app.register_blueprint(profile_bp) 
-
-print("ВСИЧКИ ROUTE-ОВЕ:")
-for rule in app.url_map.iter_rules():
-    print(rule)
+app.register_blueprint(like_bp)
+app.register_blueprint(match_bp)
+app.register_blueprint(wallet_bp)
 
 if __name__ == '__main__':
     with app.app_context():
