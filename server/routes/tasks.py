@@ -153,6 +153,35 @@ def complete_task(task_id):
     db.session.commit()
     return jsonify({"message": "Task marked as completed!"}), 200
 
+# ----- BROWSE PUBLIC TASKS -----
+@tasks_bp.route("/browse", methods=["GET", "OPTIONS"], strict_slashes=False)
+@jwt_required(optional=True)
+def browse_tasks():
+    if request.method == "OPTIONS":
+        return '', 200
+
+    user_id = None
+    try:
+        user_id = int(get_jwt_identity())
+    except Exception:
+        user_id = None
+
+    query = Task.query.filter(Task.status == "open")
+    if user_id:
+        query = query.filter(Task.created_by != user_id)
+    tasks = query.all()
+    data = [{
+        "id": t.id,
+        "title": t.title,
+        "description": t.description,
+        "deadline": t.deadline.isoformat(),
+        "reward": t.reward,
+        "status": t.status,
+        "created_by": t.created_by,
+        "claimed_by": t.claimed_by,
+    } for t in tasks]
+    return jsonify({"tasks": data}), 200
+
 # ----- SEARCH TASK -----
 @tasks_bp.route("/search", methods=["GET"], strict_slashes=False)
 @jwt_required(optional=True)

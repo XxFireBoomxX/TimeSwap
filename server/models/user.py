@@ -11,6 +11,7 @@ class User(db.Model):
     reputation = db.Column(db.Float, default=5.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     role = db.Column(db.String(50), default='student')
+    wallet = db.Column(db.Float, default=0.0)
 
     def __repr__(self):
         return f"<User {self.username} ({self.email})>"

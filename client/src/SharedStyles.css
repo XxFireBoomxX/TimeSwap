@@ -326,3 +326,11 @@ body {
     padding: 14px 0;
   }
 }
+
+.main-btn.active-btn {
+  background: #5d166d;
+  color: #fff;
+  font-weight: 800;
+  border: 2px solid #b39ddb;
+}
+
