@@ -12,6 +12,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     role = db.Column(db.String(50), default='student')
     wallet = db.Column(db.Float, default=0.0)
+    avatar_url = db.Column(db.String(255), default=None)
 
     def __repr__(self):
         return f"<User {self.username} ({self.email})>"

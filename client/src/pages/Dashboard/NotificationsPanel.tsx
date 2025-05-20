@@ -1,5 +1,5 @@
-import React from 'react'
-import type { LikeNotification } from './index'
+// src/pages/Dashboard/NotificationsPanel.tsx
+import type { LikeNotification } from "./types";
 
 interface Props {
   notifications: LikeNotification[]
@@ -7,10 +7,12 @@ interface Props {
   notifInfo: string
   onMatch: (task_id: number, user_id: number) => void
 }
-
 export default function NotificationsPanel({ notifications, notifLoading, notifInfo, onMatch }: Props) {
   return (
-    <div style={{ width: "100%", marginBottom: 18, borderRadius: 10, background: "#232339", boxShadow: "0 2px 16px 0 rgba(87,33,135,0.06)", padding: 12 }}>
+    <div style={{
+      width: "100%", marginBottom: 18, borderRadius: 10, background: "#232339",
+      boxShadow: "0 2px 16px 0 rgba(87,33,135,0.06)", padding: 12
+    }}>
       <strong style={{ color: "#b39ddb" }}>Известия: харесани задачи</strong>
       {notifLoading ? (
         <div className="info">Зареждане...</div>
@@ -26,7 +28,6 @@ export default function NotificationsPanel({ notifications, notifLoading, notifI
                 className="main-btn"
                 style={{ marginLeft: 12, padding: "5px 14px", fontSize: 13 }}
                 onClick={() => onMatch(n.task_id, n.liked_by_id)}
-                disabled={notifLoading}
               >Match!</button>
             </li>
           ))}

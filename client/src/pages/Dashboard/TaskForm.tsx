@@ -1,7 +1,7 @@
-import React from 'react'
+// src/pages/Dashboard/TaskForm.tsx
 
 interface Props {
-  form: { title: string, description: string, deadline: string, reward: string }
+  form: { [key: string]: any }
   formError: string
   processing: boolean
   editId: number | null
