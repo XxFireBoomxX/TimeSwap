@@ -13,7 +13,16 @@ interface Props {
   onComplete: (id: number) => void
 }
 
-export default function TaskList({ tasks, loading, error, processing, onEdit, onDelete, onClaim, onComplete }: Props) {
+export default function TaskList({
+  tasks,
+  loading,
+  error,
+  processing,
+  onEdit,
+  onDelete,
+  onClaim,
+  onComplete
+}: Props) {
   if (loading) return <p className="info">Зареждане...</p>
   if (error) return <div className="error">{error}</div>
 
