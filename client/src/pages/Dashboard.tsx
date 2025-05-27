@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import '../SharedStyles.css'
 
+
 interface Task {
   id: number
   title: string
@@ -30,6 +31,7 @@ const initialForm = {
   reward: '',
 }
 
+
 export default function Dashboard({ token, onLogout }: Props) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +41,18 @@ export default function Dashboard({ token, onLogout }: Props) {
   const [editId, setEditId] = useState<number | null>(null)
   const [processing, setProcessing] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  
+  
+const [currentPage, setCurrentPage] = useState(1);
+const tasksPerPage = 3; // Можеш да го промениш според желанието
+
+const indexOfLastTask = currentPage * tasksPerPage;
+const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
+
+const totalPages = Math.ceil(tasks.length / tasksPerPage);
+
+
 
   // Notifications
   const [notifications, setNotifications] = useState<LikeNotification[]>([])
@@ -46,23 +60,31 @@ export default function Dashboard({ token, onLogout }: Props) {
   const [notifInfo, setNotifInfo] = useState('')
 
   // Fetch tasks
-  const fetchTasks = () => {
-    setLoading(true)
-    setError('')
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/tasks/my`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => {
-        const data = res.data as { tasks: Task[] }
-        setTasks(Array.isArray(data) ? data : data.tasks || [])
-        setLoading(false)
-      })
-      .catch(() => {
-        setError('Грешка при зареждане на задачите')
-        setLoading(false)
-      })
-  }
+ const fetchTasks = (page = 1) => {
+  setLoading(true)
+  setError('')
+  axios
+    .get(`${import.meta.env.VITE_API_URL}/tasks/my?page=${page}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => {
+      const data = res.data as {
+        tasks: Task[],
+        totalPages: number,
+        currentPage: number
+      }
+
+      setTasks(data.tasks || [])
+
+
+      setLoading(false)
+    })
+    .catch(() => {
+      setError('Грешка при зареждане на задачите')
+      setLoading(false)
+    })
+}
+
 
   // Fetch notifications (likes към моите задачи)
   const fetchNotifications = () => {
@@ -80,14 +102,23 @@ export default function Dashboard({ token, onLogout }: Props) {
         setNotifLoading(false)
       })
   }
+const goToPrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1))
+  }
 
-  useEffect(() => {
-    fetchTasks()
-  }, [token]);
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages))
+  }
+useEffect(() => {
+  fetchTasks(currentPage)
+}, [token, currentPage])
+
 
   useEffect(() => {
     fetchNotifications()
   }, [token]);
+
+
 
   // Handle form change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -261,6 +292,7 @@ export default function Dashboard({ token, onLogout }: Props) {
       </div>
 
       {/* Старото ти съдържание */}
+      
       <div className="header-row">
         <h2 className="page-title">Твоите задачи</h2>
         <div style={{ display: "flex", gap: 12 }}>
@@ -292,41 +324,73 @@ export default function Dashboard({ token, onLogout }: Props) {
         </form>
       )}
 
-      {loading ? (
-        <p className="info">Зареждане...</p>
-      ) : error ? (
-        <div className="error">{error}</div>
+     {loading ? (
+  <p className="info">Зареждане...</p>
+) : error ? (
+  <div className="error">{error}</div>
+) : (
+  <>
+    <ul className="task-list">
+      {tasks.length === 0 ? (
+        <li className="info">Няма задачи.</li>
       ) : (
-        <ul className="task-list">
-          {tasks.length === 0 ? (
-            <li className="info">Няма задачи.</li>
-          ) : (
-            tasks.map(task => (
-              <li key={task.id} className="task-card">
-                <strong className="task-title">{task.title}</strong>
-                <div className="task-desc">{task.description}</div>
-                <div className="task-meta">
-                  Дедлайн: {new Date(task.deadline).toLocaleString('bg-BG')}
-                </div>
-                <div className="task-meta">
-                  Награда: {task.reward} лв. | Статус: {task.status}
-                </div>
-                <div className="task-actions">
-                  <button onClick={() => handleEdit(task)} disabled={processing} className="edit-btn">Редакция</button>
-                  <button onClick={() => handleDelete(task.id)} disabled={processing} className="delete-btn">Изтрий</button>
-                  {/* Оставям claim само ако искаш да не счупиш стария flow! */}
-                  {task.status === "open" && (
-                    <button onClick={() => handleClaim(task.id)} disabled={processing} className="claim-btn">Claim</button>
-                  )}
-                  {task.status === "claimed" && (
-                    <button onClick={() => handleComplete(task.id)} disabled={processing} className="complete-btn">Complete</button>
-                  )}
-                </div>
-              </li>
-            ))
-          )}
-        </ul>
+        currentTasks.map(task => (
+          <li key={task.id} className="task-card">
+            <strong className="task-title">{task.title}</strong>
+            <div className="task-desc">{task.description}</div>
+            <div className="task-meta">
+              Дедлайн: {new Date(task.deadline).toLocaleString('bg-BG')}
+            </div>
+            <div className="task-meta">
+              Награда: {task.reward} лв. | Статус: {task.status}
+            </div>
+            <div className="task-actions">
+              <button onClick={() => handleEdit(task)} disabled={processing} className="edit-btn">Редакция</button>
+              <button onClick={() => handleDelete(task.id)} disabled={processing} className="delete-btn">Изтрий</button>
+              {task.status === "open" && (
+                <button onClick={() => handleClaim(task.id)} disabled={processing} className="claim-btn">Claim</button>
+              )}
+              {task.status === "claimed" && (
+                <button onClick={() => handleComplete(task.id)} disabled={processing} className="complete-btn">Complete</button>
+              )}
+            </div>
+          </li>
+        ))
       )}
+    </ul>
+
+{totalPages > 1 && (
+  <div className="pagination">
+    <button
+      className="page-btn"
+      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+    >
+      Предишна
+    </button>
+
+    {[...Array(totalPages)].map((_, idx) => (
+      <button
+        key={idx}
+        className={`page-btn ${currentPage === idx + 1 ? 'active' : ''}`}
+        onClick={() => setCurrentPage(idx + 1)}
+      >
+        {idx + 1}
+      </button>
+    ))}
+
+    <button
+      className="page-btn"
+      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+      disabled={currentPage === totalPages}
+    >
+      Следваща
+    </button>
+  </div>
+)}
+
+  </>
+)}
     </div>
   )
 }
