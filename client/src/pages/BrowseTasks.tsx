@@ -26,10 +26,10 @@ export default function BrowseTasks({ token }: Props) {
   const fetchTasks = () => {
     setLoading(true);
     let params: any = {};
-    if (minReward) params.min_reward = minReward;
-    if (maxReward) params.max_reward = maxReward;
+    if (minReward) params.reward_min  = minReward;
+    if (maxReward) params.reward_max= maxReward;
     api
-      .get('/tasks/browse', {
+      .get('/tasks/search', {
         headers: { Authorization: `Bearer ${token}` },
         params,
       })
