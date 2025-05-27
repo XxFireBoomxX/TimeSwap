@@ -1,6 +1,5 @@
-// src/pages/Dashboard/hooks.ts
 import { useState, useCallback } from "react";
-import axios from "axios";
+import api from "../../api";
 import type { Task, LikeNotification } from "./types";
 
 export function useTasks(token: string) {
@@ -11,7 +10,7 @@ export function useTasks(token: string) {
   const fetchTasks = useCallback(() => {
     setLoading(true);
     setError("");
-    axios
+    api
       .get(`/tasks/my`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         const data = res.data as { tasks: Task[] };
@@ -34,7 +33,7 @@ export function useNotifications(token: string) {
 
   const fetchNotifications = useCallback(() => {
     setNotifLoading(true);
-    axios
+    api
       .get(`/like/notifications`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         setNotifications((res.data as { notifications: LikeNotification[] }).notifications || []);

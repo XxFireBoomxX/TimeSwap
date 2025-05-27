@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -9,13 +9,23 @@ export default function App() {
   const [showRegister, setShowRegister] = useState(false)
   const [view, setView] = useState<'dashboard' | 'browse'>('dashboard')
 
+  // --- On first load: вземи token от localStorage, ако има
+  useEffect(() => {
+    const saved = localStorage.getItem('token')
+    if (saved) setToken(saved)
+  }, [])
+
+  // --- При login: запази token-а в localStorage
   const handleLogin = (token: string) => {
     setToken(token)
+    localStorage.setItem('token', token)
     setView('dashboard')
   }
 
+  // --- При logout: изтрий го!
   const handleLogout = () => {
     setToken(null)
+    localStorage.removeItem('token')
     setView('dashboard')
   }
 

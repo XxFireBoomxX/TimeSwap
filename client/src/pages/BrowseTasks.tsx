@@ -26,8 +26,8 @@ export default function BrowseTasks({ token }: Props) {
   const fetchTasks = () => {
     setLoading(true);
     let params: any = {};
-    if (minReward) params.min_reward = minReward;
-    if (maxReward) params.max_reward = maxReward;
+    if (minReward) params.reward_min = minReward;
+    if (maxReward) params.reward_max = maxReward;
     api
       .get('/tasks/browse', {
         headers: { Authorization: `Bearer ${token}` },
@@ -44,7 +44,7 @@ export default function BrowseTasks({ token }: Props) {
       });
   };
 
-  useEffect(fetchTasks, [token, minReward, maxReward]);
+  useEffect(fetchTasks, [token]);
 
   const handleLike = async (taskId: number) => {
     try {

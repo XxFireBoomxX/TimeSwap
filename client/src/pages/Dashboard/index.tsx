@@ -1,7 +1,7 @@
 // src/pages/Dashboard/index.tsx
 
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import api from '../../api' // <-- сменено от 'axios'
 import DashboardHeader from './DashboardHeader'
 import NotificationsPanel from './NotificationsPanel'
 import TaskForm from './TaskForm'
@@ -58,14 +58,14 @@ export default function Dashboard({ token, onLogout }: Props) {
     }
     try {
       if (editId) {
-        await axios.put(`/tasks/${editId}`, {
+        await api.put(`/tasks/${editId}`, {
           title: form.title,
           description: form.description,
           deadline: form.deadline,
           reward: Number(form.reward),
         }, { headers: { Authorization: `Bearer ${token}` } })
       } else {
-        await axios.post(`/tasks/`, {
+        await api.post(`/tasks/`, {
           title: form.title,
           description: form.description,
           deadline: form.deadline,
@@ -84,7 +84,7 @@ export default function Dashboard({ token, onLogout }: Props) {
     if (!window.confirm('Сигурен ли си, че искаш да изтриеш тази задача?')) return
     setProcessing(true)
     try {
-      await axios.delete(`/tasks/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+      await api.delete(`/tasks/${id}`, { headers: { Authorization: `Bearer ${token}` } })
       fetchTasks()
     } catch {
       alert('Грешка при изтриване.')
@@ -106,7 +106,7 @@ export default function Dashboard({ token, onLogout }: Props) {
     setNotifInfo('')
     setProcessing(true)
     try {
-      await axios.post(`/match/confirm`, { task_id, user_id }, { headers: { Authorization: `Bearer ${token}` } })
+      await api.post(`/match/confirm`, { task_id, user_id }, { headers: { Authorization: `Bearer ${token}` } })
       setNotifInfo('Успешно създаден match! Задачата е възложена.')
       fetchTasks()
       fetchNotifications()
@@ -119,7 +119,7 @@ export default function Dashboard({ token, onLogout }: Props) {
   const handleClaim = async (id: number) => {
     setProcessing(true)
     try {
-      await axios.post(`/tasks/${id}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      await api.post(`/tasks/${id}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } })
       fetchTasks()
     } catch {
       alert('Грешка при клеймване.')
@@ -130,7 +130,7 @@ export default function Dashboard({ token, onLogout }: Props) {
   const handleComplete = async (id: number) => {
     setProcessing(true)
     try {
-      await axios.post(`/tasks/${id}/complete`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      await api.post(`/tasks/${id}/complete`, {}, { headers: { Authorization: `Bearer ${token}` } })
       fetchTasks()
     } catch {
       alert('Грешка при завършване.')

@@ -1,13 +1,16 @@
-import React from 'react'
-import type { Task } from './types'
+// src/pages/Dashboard/TaskCard.tsx
 
-interface Props {
-  task: Task
-  processing: boolean
-  onEdit: (task: Task) => void
-  onDelete: (id: number) => void
-  onClaim: (id: number) => void
-  onComplete: (id: number) => void
+import React from 'react';
+import type { Task } from './types';
+
+// Export Props for reusability if needed elsewhere
+export interface TaskCardProps {
+  task: Task;
+  processing: boolean;
+  onEdit: (task: Task) => void;
+  onDelete: (id: number) => void;
+  onClaim: (id: number) => void;
+  onComplete: (id: number) => void;
 }
 
 export default function TaskCard({
@@ -16,8 +19,8 @@ export default function TaskCard({
   onEdit,
   onDelete,
   onClaim,
-  onComplete
-}: Props) {
+  onComplete,
+}: TaskCardProps) {
   return (
     <li className="task-card">
       <strong className="task-title">{task.title}</strong>
@@ -29,15 +32,39 @@ export default function TaskCard({
         Награда: {task.reward} лв. | Статус: {task.status}
       </div>
       <div className="task-actions">
-        <button onClick={() => onEdit(task)} disabled={processing} className="edit-btn">Редакция</button>
-        <button onClick={() => onDelete(task.id)} disabled={processing} className="delete-btn">Изтрий</button>
-        {task.status === "open" && (
-          <button onClick={() => onClaim(task.id)} disabled={processing} className="claim-btn">Claim</button>
+        <button
+          onClick={() => onEdit(task)}
+          disabled={processing}
+          className="edit-btn"
+        >
+          Редакция
+        </button>
+        <button
+          onClick={() => onDelete(task.id)}
+          disabled={processing}
+          className="delete-btn"
+        >
+          Изтрий
+        </button>
+        {task.status === 'open' && (
+          <button
+            onClick={() => onClaim(task.id)}
+            disabled={processing}
+            className="claim-btn"
+          >
+            Claim
+          </button>
         )}
-        {task.status === "claimed" && (
-          <button onClick={() => onComplete(task.id)} disabled={processing} className="complete-btn">Complete</button>
+        {task.status === 'claimed' && (
+          <button
+            onClick={() => onComplete(task.id)}
+            disabled={processing}
+            className="complete-btn"
+          >
+            Complete
+          </button>
         )}
       </div>
     </li>
-  )
+  );
 }

@@ -1,10 +1,20 @@
-import React from 'react'
 import '../SharedStyles.css';
 
 interface HomeProps {
   onGoToLogin: () => void
   onGoToRegister: () => void
 }
+
+const mainBtnStyle = {
+  width: '100%',
+  padding: '12px 0',
+  fontWeight: 600,
+  border: 'none',
+  borderRadius: 8,
+  fontSize: '1.08rem',
+  letterSpacing: '1px',
+  boxShadow: '0 1px 8px 0 rgba(87, 33, 135, 0.08)'
+} as React.CSSProperties;
 
 export default function Home({ onGoToLogin, onGoToRegister }: HomeProps) {
   return (
@@ -23,36 +33,14 @@ export default function Home({ onGoToLogin, onGoToRegister }: HomeProps) {
         <button
           className="main-btn"
           onClick={onGoToLogin}
-          style={{
-            width: '100%',
-            padding: '12px 0',
-            background: '#8e24aa',
-            color: '#fff',
-            fontWeight: 600,
-            border: 'none',
-            borderRadius: 8,
-            fontSize: '1.08rem',
-            letterSpacing: '1px',
-            boxShadow: '0 1px 8px 0 rgba(87, 33, 135, 0.08)'
-          }}
+          style={{ ...mainBtnStyle, background: '#8e24aa', color: '#fff' }}
         >
           Вход
         </button>
         <button
           className="main-btn"
           onClick={onGoToRegister}
-          style={{
-            width: '100%',
-            padding: '12px 0',
-            background: '#232339',
-            color: '#b39ddb',
-            fontWeight: 600,
-            border: 'none',
-            borderRadius: 8,
-            fontSize: '1.08rem',
-            letterSpacing: '1px',
-            boxShadow: '0 1px 8px 0 rgba(87, 33, 135, 0.04)'
-          }}
+          style={{ ...mainBtnStyle, background: '#232339', color: '#b39ddb', boxShadow: '0 1px 8px 0 rgba(87,33,135,0.04)' }}
         >
           Регистрация
         </button>

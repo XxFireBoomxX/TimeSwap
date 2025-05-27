@@ -1,8 +1,8 @@
 // src/pages/Register.tsx
 
 import { useState } from 'react'
-import axios from 'axios'
-import '../SharedStyles.css';
+import api from '../api' // 🟣 Използвай api.ts вместо axios директно!
+import '../SharedStyles.css'
 
 interface Props {
   onSuccessLogin: (token: string) => void
@@ -25,15 +25,12 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
     setError('')
     setLoading(true)
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/register`,
-        { email, username, password }
-      )
-      const res = await axios.post<LoginResponse>(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
-        { email, password }
-      )
+      await api.post('/auth/register', { email, username, password }) // 🟣
+      const res = await api.post<LoginResponse>('/auth/login', { email, password }) // 🟣
       onSuccessLogin(res.data.access_token)
+      setEmail('')
+      setUsername('')
+      setPassword('')
     } catch {
       setError('Грешка при регистрация (може би вече има такъв email/потребител)')
     } finally {
@@ -77,6 +74,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
         className="switch-btn"
         type="button"
         onClick={onSwitchToLogin}
+        disabled={loading}
       >
         Вече имаш акаунт? Влез!
       </button>

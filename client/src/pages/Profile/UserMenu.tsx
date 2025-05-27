@@ -13,7 +13,7 @@ export default function UserMenu({ token, onLogout }: UserMenuProps) {
   const [avatarUrl, setAvatarUrl] = useState<string>('/assets/default-avatar.png')
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Земи баланса (замени endpoint ако трябва!)
+  // Взимаш баланса
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/wallet/balance`, {
@@ -23,7 +23,7 @@ export default function UserMenu({ token, onLogout }: UserMenuProps) {
       .catch(() => setBalance(0))
   }, [token])
 
-  // Земи аватара (или го сетни дефолт)
+  // Взимаш аватара
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/profile/avatar`, {
@@ -72,12 +72,15 @@ export default function UserMenu({ token, onLogout }: UserMenuProps) {
             <strong style={{ color: "#b39ddb" }}>Моят акаунт</strong>
           </div>
           <div>
-            <AvatarUpload token={token} onUpload={setAvatarUrl} />
+            <AvatarUpload
+              token={token}
+              currentUrl={avatarUrl}
+              onUpload={setAvatarUrl}
+            />
           </div>
           <button className="main-btn" style={{ width: "100%", marginTop: 10 }} onClick={onLogout}>Изход</button>
           <button className="main-btn" style={{ width: "100%", marginTop: 6 }}>Настройки</button>
           <button className="main-btn" style={{ width: "100%", marginTop: 6 }}>Портфейл</button>
-          {/* Добави още каквото искаш! */}
         </div>
       )}
     </div>

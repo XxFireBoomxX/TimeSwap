@@ -1,9 +1,8 @@
 // src/pages/Login.tsx
 
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../api' // <<< ВАЖНО: използвай си api.ts за заявки!
 import '../SharedStyles.css';
-
 
 interface Props {
   onSuccessLogin: (token: string) => void
@@ -25,8 +24,8 @@ export default function Login({ onSuccessLogin, onSwitchToRegister }: Props) {
     setError('')
     setLoading(true)
     try {
-      const res = await axios.post<LoginResponse>(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
+      const res = await api.post<LoginResponse>(
+        '/auth/login', // <<< НЕ ти трябва URL, api.ts го оправя!
         { email, password }
       )
       onSuccessLogin(res.data.access_token)
