@@ -163,7 +163,13 @@ FRONTEND_ORIGIN=http://localhost:5173
 ## Примерни Screenshots
 
 <img src="https://github.com/user-attachments/assets/d13a345c-0c45-4782-b7b6-915dfd09ce26" width="50%">
+
+---
+
 <img src="https://github.com/user-attachments/assets/a7188729-30b6-4ec5-bdb9-522861488aba" width="50%">
+
+---
+
 <img src="https://github.com/user-attachments/assets/e3d928d6-1ca3-4be5-8a11-f046e095859a" width="50%">
 
 ---
