@@ -297,17 +297,17 @@ body {
   min-width: 100vw;
 }
 
-/* Основен fullscreen flex wrapper */
 .fullscreen-center {
-  min-height: 100vh;
-  min-width: 100vw;
-  width: 100vw;
-  height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* 👈 если хочешь, чтобы контент начинался сверху */
+  min-height: 100vh;
+  width: 100vw;
+  overflow-y: auto;
   background: #171624;
 }
+
 
 /* Центриране за главния контейнер */
 .page-container,
@@ -335,9 +335,38 @@ body {
   }
 }
 
+/* Активен основен бутон */
 .main-btn.active-btn {
   background: #5d166d;
   color: #fff;
   font-weight: 800;
   border: 2px solid #b39ddb;
+}
+
+/* Пагинация */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.page-btn {
+  padding: 8px 16px;
+  border: none;
+  background-color: #2e2947;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.page-btn:hover {
+  background-color: #3b315e;
+}
+
+.page-btn.active {
+  background-color: #b42da4;
+  color: white;
 }

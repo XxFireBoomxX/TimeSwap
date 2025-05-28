@@ -8,6 +8,7 @@ export default function App() {
   const [token, setToken] = useState<string | null>(null)
   const [showRegister, setShowRegister] = useState(false)
   const [view, setView] = useState<'dashboard' | 'browse'>('dashboard')
+  
 
   // --- On first load: вземи token от localStorage, ако има
   useEffect(() => {

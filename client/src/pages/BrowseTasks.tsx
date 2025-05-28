@@ -29,7 +29,7 @@ export default function BrowseTasks({ token }: Props) {
     if (minReward) params.reward_min = minReward;
     if (maxReward) params.reward_max = maxReward;
     api
-      .get('/tasks/browse', {
+      .get('/tasks/search', {
         headers: { Authorization: `Bearer ${token}` },
         params,
       })
