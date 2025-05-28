@@ -1,13 +1,12 @@
-// src/pages/Dashboard/index.tsx
-
 import { useEffect, useState } from 'react'
-import api from '../../api' // <-- сменено от 'axios'
+import api from '../../api'
 import DashboardHeader from './DashboardHeader'
 import NotificationsPanel from './NotificationsPanel'
 import TaskForm from './TaskForm'
 import TaskList from './TaskList'
-import { useTasks, useNotifications } from './hooks'
+import { useTasks, useNotifications, useLikedTasks } from './hooks'
 import type { Task } from './types'
+import AnimatedMessage from '../../components/AnimatedMessage' // 🩷
 import '../../SharedStyles.css'
 
 interface Props {
@@ -23,21 +22,64 @@ const initialForm = {
 }
 
 export default function Dashboard({ token, onLogout }: Props) {
-  // Tasks state
-  const { tasks, loading, error, setTasks, fetchTasks } = useTasks(token)
-  // Notifications state
+  const [activeTab, setActiveTab] = useState<'mine' | 'liked'>('mine')
+
+  // User info (user id за Complete бутона)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+
+  // Fancy animated error/info messages!
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [infoMsg, setInfoMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Вземи текущия потребител (id)
+    api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => setCurrentUserId((res.data as { id: number }).id))
+      .catch(() => setCurrentUserId(null))
+  }, [token])
+
+  // My tasks
+  const { tasks, loading, error, fetchTasks } = useTasks(token)
+  // Liked tasks
+  const { likedTasks, loading: likedLoading, error: likedError, fetchLikedTasks } = useLikedTasks(token)
+  // Notifications
   const { notifications, notifLoading, notifInfo, setNotifInfo, fetchNotifications } = useNotifications(token)
 
+  // Form state
   const [form, setForm] = useState(initialForm)
   const [formError, setFormError] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
   const [processing, setProcessing] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
-  useEffect(fetchTasks, [token])
-  useEffect(fetchNotifications, [token])
+  // Pagination for my tasks
+  const [currentPage, setCurrentPage] = useState(1)
+  const tasksPerPage = 3
+  const totalPages = Math.ceil(tasks.length / tasksPerPage)
+  const indexOfLastTask = currentPage * tasksPerPage
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage
+  const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask)
 
-  // Handlers
+  // Fetch my tasks on token/tab change
+  useEffect(() => {
+    if (activeTab === 'mine') fetchTasks()
+  }, [token, activeTab])
+
+  // Fetch liked tasks only if needed
+  useEffect(() => {
+    if (activeTab === 'liked') fetchLikedTasks()
+  }, [token, activeTab])
+
+  useEffect(() => {
+    fetchNotifications()
+  }, [token])
+
+  const refreshAndGoFirst = () => {
+    setCurrentPage(1)
+    fetchTasks()
+  }
+
+  // Form handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -73,9 +115,11 @@ export default function Dashboard({ token, onLogout }: Props) {
         }, { headers: { Authorization: `Bearer ${token}` } })
       }
       resetForm()
-      fetchTasks()
+      refreshAndGoFirst()
+      setInfoMsg('Задачата е записана успешно!')
     } catch {
       setFormError('Грешка при създаване/редакция на задачата.')
+      setErrorMsg('Грешка при създаване/редакция на задачата!')
     } finally {
       setProcessing(false)
     }
@@ -85,9 +129,10 @@ export default function Dashboard({ token, onLogout }: Props) {
     setProcessing(true)
     try {
       await api.delete(`/tasks/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-      fetchTasks()
+      refreshAndGoFirst()
+      setInfoMsg('Задачата е изтрита успешно!')
     } catch {
-      alert('Грешка при изтриване.')
+      setErrorMsg('Грешка при изтриване.')
     } finally {
       setProcessing(false)
     }
@@ -108,21 +153,12 @@ export default function Dashboard({ token, onLogout }: Props) {
     try {
       await api.post(`/match/confirm`, { task_id, user_id }, { headers: { Authorization: `Bearer ${token}` } })
       setNotifInfo('Успешно създаден match! Задачата е възложена.')
-      fetchTasks()
+      setInfoMsg('Задачата е възложена и вече има изпълнител!')
+      refreshAndGoFirst()
       fetchNotifications()
     } catch (e: any) {
       setNotifInfo(e?.response?.data?.error || 'Грешка при match.')
-    } finally {
-      setProcessing(false)
-    }
-  }
-  const handleClaim = async (id: number) => {
-    setProcessing(true)
-    try {
-      await api.post(`/tasks/${id}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } })
-      fetchTasks()
-    } catch {
-      alert('Грешка при клеймване.')
+      setErrorMsg(e?.response?.data?.error || 'Грешка при match.')
     } finally {
       setProcessing(false)
     }
@@ -130,10 +166,12 @@ export default function Dashboard({ token, onLogout }: Props) {
   const handleComplete = async (id: number) => {
     setProcessing(true)
     try {
-      await api.post(`/tasks/${id}/complete`, {}, { headers: { Authorization: `Bearer ${token}` } })
-      fetchTasks()
-    } catch {
-      alert('Грешка при завършване.')
+      await api.post(`/match/complete`, { task_id: id }, { headers: { Authorization: `Bearer ${token}` } })
+      refreshAndGoFirst()
+      setInfoMsg('Задачата е завършена и парите са изплатени! 🎉')
+    } catch (e: any) {
+      const msg = e?.response?.data?.error || 'Грешка при завършване.'
+      setErrorMsg(msg)
     } finally {
       setProcessing(false)
     }
@@ -141,7 +179,18 @@ export default function Dashboard({ token, onLogout }: Props) {
 
   return (
     <div className="page-container dashboard-container">
-      <DashboardHeader token={token} onLogout={onLogout} />
+      <DashboardHeader
+        token={token}
+        onLogout={onLogout}
+      />
+
+      {/* --- FANCY MESSAGE ZONE --- */}
+      {errorMsg && (
+        <AnimatedMessage type="error" message={errorMsg} onHide={() => setErrorMsg(null)} />
+      )}
+      {infoMsg && (
+        <AnimatedMessage type="info" message={infoMsg} onHide={() => setInfoMsg(null)} />
+      )}
 
       <NotificationsPanel
         notifications={notifications}
@@ -150,41 +199,121 @@ export default function Dashboard({ token, onLogout }: Props) {
         onMatch={handleMatch}
       />
 
-      <div className="header-row" style={{ marginTop: 0 }}>
-        <h2 className="page-title">Твоите задачи</h2>
-        <div style={{ display: "flex", gap: 12 }}>
+      {/* --- Tab Row --- */}
+      <div className="tab-row" style={{
+        width: '100%',
+        display: 'flex',
+        gap: 0,
+        margin: '12px 0 18px 0',
+        background: '#232339',
+        borderRadius: 12,
+        overflow: 'hidden',
+        boxShadow: '0 1px 8px #b39ddb1a'
+      }}>
+        <button
+          className={`main-btn tab-btn${activeTab === 'liked' ? ' active-btn' : ''}`}
+          style={{
+            flex: 1,
+            borderRadius: 0,
+            borderRight: '1.5px solid #333',
+            fontSize: 18,
+            fontWeight: 700,
+            padding: '14px 0'
+          }}
+          onClick={() => { setActiveTab('liked'); setShowForm(false); }}
+        >❤️ Харесани задачи</button>
+        <button
+          className={`main-btn tab-btn${activeTab === 'mine' ? ' active-btn' : ''}`}
+          style={{
+            flex: 1,
+            borderRadius: 0,
+            fontSize: 18,
+            fontWeight: 700,
+            padding: '14px 0'
+          }}
+          onClick={() => setActiveTab('mine')}
+        >📝 Моите задачи</button>
+        {/* + само ако сме в моите задачи */}
+        {activeTab === 'mine' && (
           <button
             className="main-btn"
-            style={{ fontSize: 24, padding: "8px 16px", borderRadius: "50%", fontWeight: 900, lineHeight: 1 }}
+            style={{
+              fontSize: 26,
+              padding: "0 22px",
+              borderRadius: "0 12px 12px 0",
+              fontWeight: 900,
+              background: "#8e24aa",
+              color: "#fff",
+              border: 'none'
+            }}
             title="Създай нова задача"
             onClick={() => { setShowForm(v => !v); setEditId(null); setForm(initialForm) }}
             disabled={processing}
           >+</button>
-        </div>
+        )}
       </div>
 
-      {showForm && (
-        <TaskForm
-          form={form}
-          formError={formError}
-          processing={processing}
-          editId={editId}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-          onCancel={resetForm}
-        />
+      {/* --- Tab Content --- */}
+      {activeTab === 'mine' && (
+        <>
+          {showForm && (
+            <TaskForm
+              form={form}
+              formError={formError}
+              processing={processing}
+              editId={editId}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+              onCancel={resetForm}
+            />
+          )}
+          <TaskList
+            tasks={currentTasks}
+            loading={loading}
+            error={error}
+            processing={processing}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onComplete={handleComplete}
+            currentUserId={currentUserId ?? -1}
+          />
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="page-btn"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >Предишна</button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  className={`page-btn${currentPage === i + 1 ? ' active' : ''}`}
+                  onClick={() => setCurrentPage(i + 1)}
+                  disabled={currentPage === i + 1}
+                >{i + 1}</button>
+              ))}
+              <button
+                className="page-btn"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >Следваща</button>
+            </div>
+          )}
+        </>
       )}
 
-      <TaskList
-        tasks={tasks}
-        loading={loading}
-        error={error}
-        processing={processing}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onClaim={handleClaim}
-        onComplete={handleComplete}
-      />
+      {activeTab === 'liked' && (
+        <TaskList
+          tasks={likedTasks}
+          loading={likedLoading}
+          error={likedError}
+          processing={processing}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          onComplete={() => {}}
+          currentUserId={currentUserId ?? -1}
+        />
+      )}
     </div>
   )
 }

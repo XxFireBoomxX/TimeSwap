@@ -8,7 +8,6 @@ export interface Task {
   reward: number
   status: string
   created_by: number
-  claimed_by: number | null
 }
 export interface LikeNotification {
   task_id: number

@@ -13,27 +13,37 @@ match_bp = Blueprint("match", __name__, url_prefix="/match")
 @jwt_required()
 def confirm_match():
     data = request.get_json()
-    user_id = int(get_jwt_identity())  # това е авторът на задачата
+    user_id = int(get_jwt_identity())  # Авторът на задачата
     task_id = data.get("task_id")
-    liked_user_id = data.get("user_id")  # този, който е харесал задачата
+    liked_user_id = data.get("user_id")  # Този, който е харесал задачата
 
     task = Task.query.get_or_404(task_id)
     if task.created_by != user_id:
         return jsonify({"error": "Не си създател на тази задача!"}), 403
-    if task.status != "open" or task.claimed_by is not None:
-        return jsonify({"error": "Задачата вече е взета или не е open!"}), 400
 
-    # Провери има ли like от този user към тази задача
+    if task.status != "open":
+        return jsonify({"error": f"Задачата не е open, а е '{task.status}'"}), 400
+
+    if task.claimed_by is not None:
+        return jsonify({"error": "Задачата вече е възложена!"}), 400
+
     like = Like.query.filter_by(user_id=liked_user_id, task_id=task_id).first()
     if not like:
         return jsonify({"error": "Този потребител не е харесал задачата ти!"}), 400
 
-    # Създай match и задай claimed_by
+    # Проверка дали вече има match между тази задача и този потребител
+    old_match = Match.query.filter_by(task_id=task_id, user_id=liked_user_id).first()
+    if old_match:
+        return jsonify({"error": "Вече е създаден match с този потребител!"}), 400
+
     match = Match(task_id=task_id, user_id=liked_user_id)
     db.session.add(match)
     task.claimed_by = liked_user_id
     task.status = "in_progress"
     db.session.commit()
+
+    print(f"[MATCH] Task {task_id} -> user {liked_user_id} | by {user_id}")
+
     return jsonify({"message": "Match създаден! Задачата е възложена на избрания user."}), 200
 
 # Всички задачи, които аз изпълнявам (т.е. съм matched)
@@ -80,11 +90,18 @@ def complete_task_and_pay():
     user_id = int(get_jwt_identity())
     data = request.get_json()
     task_id = data.get("task_id")
+    if not task_id:
+        return jsonify({"error": "Липсва task_id"}), 400
+
     task = Task.query.get_or_404(task_id)
+
+    # Дебъг лог:
+    print(f"[COMPLETE ATTEMPT] task_id={task_id} | user_id={user_id} | status={task.status} | claimed_by={task.claimed_by}")
+
     if task.created_by != user_id:
         return jsonify({"error": "Само създателят на задачата може да я завърши!"}), 403
     if task.status != "in_progress":
-        return jsonify({"error": "Задачата не е в процес на изпълнение!"}), 400
+        return jsonify({"error": f"Задачата не е в процес на изпълнение! (status={task.status})"}), 400
     if not task.claimed_by:
         return jsonify({"error": "Няма изпълнител на задачата!"}), 400
 
@@ -100,12 +117,12 @@ def complete_task_and_pay():
     worker.wallet += reward
     task.status = "completed"
 
-    # Маркирай match като completed
     match = Match.query.filter_by(task_id=task.id, user_id=worker.id).first()
     if match:
         match.is_completed = True
 
     db.session.commit()
+
+    print(f"[COMPLETE SUCCESS] Task {task_id} completed! Owner {owner.username}, Worker {worker.username}, Reward {reward}")
+
     return jsonify({"message": f"Задачата е завършена, {reward} прехвърлени към {worker.username}!"}), 200
-
-

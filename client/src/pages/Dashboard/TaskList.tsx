@@ -1,4 +1,5 @@
 // src/pages/Dashboard/TaskList.tsx
+
 import React from 'react';
 import type { Task } from "./types";
 import TaskCard from './TaskCard';
@@ -10,8 +11,8 @@ export interface TaskListProps {
   processing: boolean;
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
-  onClaim: (id: number) => void;
   onComplete: (id: number) => void;
+  currentUserId: number;
 }
 
 export default function TaskList({
@@ -21,11 +22,19 @@ export default function TaskList({
   processing,
   onEdit,
   onDelete,
-  onClaim,
   onComplete,
+  currentUserId,
 }: TaskListProps) {
   if (loading) return <p className="info">Зареждане...</p>;
-  if (error) return <div className="error">{error}</div>;
+
+  if (error) {
+    return (
+      <div className="animated-message error show" style={{ margin: "20px 0" }}>
+        {error}
+      </div>
+    );
+  }
+
   return (
     <ul className="task-list">
       {tasks.length === 0 ? (
@@ -38,8 +47,8 @@ export default function TaskList({
             processing={processing}
             onEdit={onEdit}
             onDelete={onDelete}
-            onClaim={onClaim}
             onComplete={onComplete}
+            currentUserId={currentUserId}
           />
         ))
       )}

@@ -1,3 +1,5 @@
+// src/pages/Profile/AvatarUpload.tsx
+
 import React, { useState } from 'react'
 import axios from 'axios'
 
@@ -49,10 +51,30 @@ export default function AvatarUpload({ token, currentUrl, onUpload }: AvatarUplo
       <img
         src={preview || currentUrl}
         alt="Avatar Preview"
-        style={{ width: 64, height: 64, borderRadius: '50%', marginBottom: 10, border: '2px solid #7C4DFF' }}
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: '50%',
+          marginBottom: 10,
+          border: '2px solid #7C4DFF'
+        }}
       />
-      <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} />
-      {error && <div className="error">{error}</div>}
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        disabled={uploading}
+        style={{
+          marginBottom: 8,
+          color: '#b39ddb',
+          fontWeight: 600,
+        }}
+      />
+      {error && (
+        <div className="animated-message error show" style={{ marginTop: 12 }}>
+          {error}
+        </div>
+      )}
     </div>
   )
 }

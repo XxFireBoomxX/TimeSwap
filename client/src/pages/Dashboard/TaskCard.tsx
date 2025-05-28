@@ -1,16 +1,13 @@
-// src/pages/Dashboard/TaskCard.tsx
-
 import React from 'react';
 import type { Task } from './types';
 
-// Export Props for reusability if needed elsewhere
 export interface TaskCardProps {
   task: Task;
   processing: boolean;
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
-  onClaim: (id: number) => void;
   onComplete: (id: number) => void;
+  currentUserId: number;
 }
 
 export default function TaskCard({
@@ -18,9 +15,12 @@ export default function TaskCard({
   processing,
   onEdit,
   onDelete,
-  onClaim,
   onComplete,
+  currentUserId,
 }: TaskCardProps) {
+  // Само авторът вижда Complete, ако задачата е in_progress
+  const showComplete = task.status === 'in_progress' && task.created_by === currentUserId;
+
   return (
     <li className="task-card">
       <strong className="task-title">{task.title}</strong>
@@ -46,20 +46,14 @@ export default function TaskCard({
         >
           Изтрий
         </button>
-        {task.status === 'open' && (
-          <button
-            onClick={() => onClaim(task.id)}
-            disabled={processing}
-            className="claim-btn"
-          >
-            Claim
-          </button>
-        )}
-        {task.status === 'claimed' && (
+        {showComplete && (
           <button
             onClick={() => onComplete(task.id)}
             disabled={processing}
-            className="complete-btn"
+            className="complete-btn show-complete-anim"
+            style={{
+              animation: 'popUp 0.41s cubic-bezier(.61,-0.07,.47,1.15)'
+            }}
           >
             Complete
           </button>

@@ -65,7 +65,11 @@ export default function TaskForm({
         disabled={processing}
         className="task-input"
       />
-      {formError && <div className="error">{formError}</div>}
+      {formError && (
+        <div className="animated-message error show" style={{ marginBottom: 8 }}>
+          {formError}
+        </div>
+      )}
       <div className="task-form-actions">
         <button
           type="submit"

@@ -1,4 +1,5 @@
 // src/pages/Dashboard/DashboardHeader.tsx
+
 import UserMenu from '../Profile/UserMenu'
 
 interface DashboardHeaderProps {
@@ -6,7 +7,10 @@ interface DashboardHeaderProps {
   onLogout: () => void
 }
 
-export default function DashboardHeader({ token, onLogout }: DashboardHeaderProps) {
+export default function DashboardHeader({
+  token,
+  onLogout
+}: DashboardHeaderProps) {
   return (
     <div
       className="dashboard-header"
@@ -20,7 +24,7 @@ export default function DashboardHeader({ token, onLogout }: DashboardHeaderProp
       }}
     >
       <div style={{ fontWeight: 700, fontSize: 24, color: "#b39ddb", letterSpacing: 1 }}>
-        TimeSwap
+        <span className="logo">TimeSwap <span style={{fontSize: 18, color:'#8e24aa'}}>✨</span></span>
       </div>
       <UserMenu token={token} onLogout={onLogout} />
     </div>

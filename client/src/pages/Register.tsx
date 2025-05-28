@@ -1,7 +1,7 @@
 // src/pages/Register.tsx
 
 import { useState } from 'react'
-import api from '../api' // 🟣 Използвай api.ts вместо axios директно!
+import api from '../api'
 import '../SharedStyles.css'
 
 interface Props {
@@ -25,8 +25,8 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
     setError('')
     setLoading(true)
     try {
-      await api.post('/auth/register', { email, username, password }) // 🟣
-      const res = await api.post<LoginResponse>('/auth/login', { email, password }) // 🟣
+      await api.post('/auth/register', { email, username, password })
+      const res = await api.post<LoginResponse>('/auth/login', { email, password })
       onSuccessLogin(res.data.access_token)
       setEmail('')
       setUsername('')
@@ -40,7 +40,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
 
   return (
     <div className="page-container">
-      <h2>Регистрация</h2>
+      <h2 className="page-title" style={{ animation: 'showup 0.6s' }}>Регистрация</h2>
       <form onSubmit={handleRegister}>
         <input
           type="text"
@@ -49,6 +49,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
           onChange={(e) => setUsername(e.target.value)}
           required
           disabled={loading}
+          className="task-input"
         />
         <input
           type="email"
@@ -57,6 +58,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={loading}
+          className="task-input"
         />
         <input
           type="password"
@@ -65,8 +67,13 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
           onChange={(e) => setPassword(e.target.value)}
           required
           disabled={loading}
+          className="task-input"
         />
-        <button type="submit" disabled={loading}>
+        <button
+          type="submit"
+          className="main-btn"
+          disabled={loading}
+        >
           {loading ? 'Моля, изчакай...' : 'Регистрация'}
         </button>
       </form>
