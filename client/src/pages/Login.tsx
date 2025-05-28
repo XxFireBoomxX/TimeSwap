@@ -1,9 +1,6 @@
-// src/pages/Login.tsx
-
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../api'
 import '../SharedStyles.css';
-
 
 interface Props {
   onSuccessLogin: (token: string) => void
@@ -25,8 +22,8 @@ export default function Login({ onSuccessLogin, onSwitchToRegister }: Props) {
     setError('')
     setLoading(true)
     try {
-      const res = await axios.post<LoginResponse>(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
+      const res = await api.post<LoginResponse>(
+        '/auth/login',
         { email, password }
       )
       onSuccessLogin(res.data.access_token)
@@ -39,7 +36,7 @@ export default function Login({ onSuccessLogin, onSwitchToRegister }: Props) {
 
   return (
     <div className="page-container">
-      <h2>Вход</h2>
+      <h2 className="page-title" style={{ animation: 'showup 0.6s' }}>Вход</h2>
       <form onSubmit={handleLogin}>
         <input
           type="email"
@@ -47,6 +44,7 @@ export default function Login({ onSuccessLogin, onSwitchToRegister }: Props) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="task-input"
         />
         <input
           type="password"
@@ -54,8 +52,13 @@ export default function Login({ onSuccessLogin, onSwitchToRegister }: Props) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="task-input"
         />
-        <button type="submit" disabled={loading}>
+        <button
+          type="submit"
+          className="main-btn"
+          disabled={loading}
+        >
           {loading ? 'Моля, изчакай...' : 'Вход'}
         </button>
       </form>

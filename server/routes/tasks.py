@@ -67,13 +67,34 @@ def get_claimed_tasks():
 @jwt_required()
 def create_task():
     data = request.get_json()
+    errors = []
+
+    title = data.get("title", "")
+    description = data.get("description", "")
+    reward = data.get("reward")
+    deadline = data.get("deadline", "")
+
+    # ------- ВАЛИДАЦИЯ -------
+    if not title or not isinstance(title, str) or len(title.strip()) < 3 or len(title) > 120:
+        errors.append("Title is required (min 3, max 120 chars).")
+    if not description or not isinstance(description, str) or len(description.strip()) < 3 or len(description) > 500:
+        errors.append("Description is required (min 3, max 500 chars).")
+    if reward is None or not isinstance(reward, (int, float)) or reward <= 0:
+        errors.append("Reward must be a positive number.")
+    try:
+        deadline_dt = datetime.fromisoformat(deadline)
+    except Exception:
+        errors.append("Deadline must be a valid ISO date string.")
+
+    if errors:
+        return jsonify({"errors": errors}), 400
+
     user_id = int(get_jwt_identity())
-    deadline = datetime.fromisoformat(data["deadline"])
     task = Task(
-        title=data["title"],
-        description=data["description"],
-        deadline=deadline,
-        reward=data["reward"],
+        title=title.strip(),
+        description=description.strip(),
+        deadline=deadline_dt,
+        reward=reward,
         created_by=user_id,
         status="open"
     )

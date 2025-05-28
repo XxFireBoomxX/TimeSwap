@@ -1,8 +1,8 @@
 // src/pages/Register.tsx
 
 import { useState } from 'react'
-import axios from 'axios'
-import '../SharedStyles.css';
+import api from '../api'
+import '../SharedStyles.css'
 
 interface Props {
   onSuccessLogin: (token: string) => void
@@ -25,15 +25,12 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
     setError('')
     setLoading(true)
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/register`,
-        { email, username, password }
-      )
-      const res = await axios.post<LoginResponse>(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
-        { email, password }
-      )
+      await api.post('/auth/register', { email, username, password })
+      const res = await api.post<LoginResponse>('/auth/login', { email, password })
       onSuccessLogin(res.data.access_token)
+      setEmail('')
+      setUsername('')
+      setPassword('')
     } catch {
       setError('Грешка при регистрация (може би вече има такъв email/потребител)')
     } finally {
@@ -43,7 +40,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
 
   return (
     <div className="page-container">
-      <h2>Регистрация</h2>
+      <h2 className="page-title" style={{ animation: 'showup 0.6s' }}>Регистрация</h2>
       <form onSubmit={handleRegister}>
         <input
           type="text"
@@ -52,6 +49,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
           onChange={(e) => setUsername(e.target.value)}
           required
           disabled={loading}
+          className="task-input"
         />
         <input
           type="email"
@@ -60,6 +58,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={loading}
+          className="task-input"
         />
         <input
           type="password"
@@ -68,8 +67,13 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
           onChange={(e) => setPassword(e.target.value)}
           required
           disabled={loading}
+          className="task-input"
         />
-        <button type="submit" disabled={loading}>
+        <button
+          type="submit"
+          className="main-btn"
+          disabled={loading}
+        >
           {loading ? 'Моля, изчакай...' : 'Регистрация'}
         </button>
       </form>
@@ -77,6 +81,7 @@ export default function Register({ onSuccessLogin, onSwitchToLogin }: Props) {
         className="switch-btn"
         type="button"
         onClick={onSwitchToLogin}
+        disabled={loading}
       >
         Вече имаш акаунт? Влез!
       </button>

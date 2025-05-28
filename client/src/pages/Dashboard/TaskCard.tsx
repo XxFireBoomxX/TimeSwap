@@ -1,13 +1,13 @@
-import React from 'react'
-import type { Task } from './index'
+import React from 'react';
+import type { Task } from './types';
 
-interface Props {
-  task: Task
-  processing: boolean
-  onEdit: (task: Task) => void
-  onDelete: (id: number) => void
-  onClaim: (id: number) => void
-  onComplete: (id: number) => void
+export interface TaskCardProps {
+  task: Task;
+  processing: boolean;
+  onEdit: (task: Task) => void;
+  onDelete: (id: number) => void;
+  onComplete: (id: number) => void;
+  currentUserId: number;
 }
 
 export default function TaskCard({
@@ -15,9 +15,12 @@ export default function TaskCard({
   processing,
   onEdit,
   onDelete,
-  onClaim,
-  onComplete
-}: Props) {
+  onComplete,
+  currentUserId,
+}: TaskCardProps) {
+  // Само авторът вижда Complete, ако задачата е in_progress
+  const showComplete = task.status === 'in_progress' && task.created_by === currentUserId;
+
   return (
     <li className="task-card">
       <strong className="task-title">{task.title}</strong>
@@ -29,15 +32,33 @@ export default function TaskCard({
         Награда: {task.reward} лв. | Статус: {task.status}
       </div>
       <div className="task-actions">
-        <button onClick={() => onEdit(task)} disabled={processing} className="edit-btn">Редакция</button>
-        <button onClick={() => onDelete(task.id)} disabled={processing} className="delete-btn">Изтрий</button>
-        {task.status === "open" && (
-          <button onClick={() => onClaim(task.id)} disabled={processing} className="claim-btn">Claim</button>
-        )}
-        {task.status === "claimed" && (
-          <button onClick={() => onComplete(task.id)} disabled={processing} className="complete-btn">Complete</button>
+        <button
+          onClick={() => onEdit(task)}
+          disabled={processing}
+          className="edit-btn"
+        >
+          Редакция
+        </button>
+        <button
+          onClick={() => onDelete(task.id)}
+          disabled={processing}
+          className="delete-btn"
+        >
+          Изтрий
+        </button>
+        {showComplete && (
+          <button
+            onClick={() => onComplete(task.id)}
+            disabled={processing}
+            className="complete-btn show-complete-anim"
+            style={{
+              animation: 'popUp 0.41s cubic-bezier(.61,-0.07,.47,1.15)'
+            }}
+          >
+            Complete
+          </button>
         )}
       </div>
     </li>
-  )
+  );
 }

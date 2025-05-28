@@ -1,16 +1,18 @@
-import React from 'react'
-import type { Task } from './index'
-import TaskCard from './TaskCard'
+// src/pages/Dashboard/TaskList.tsx
 
-interface Props {
-  tasks: Task[]
-  loading: boolean
-  error: string
-  processing: boolean
-  onEdit: (task: Task) => void
-  onDelete: (id: number) => void
-  onClaim: (id: number) => void
-  onComplete: (id: number) => void
+import React from 'react';
+import type { Task } from "./types";
+import TaskCard from './TaskCard';
+
+export interface TaskListProps {
+  tasks: Task[];
+  loading: boolean;
+  error: string;
+  processing: boolean;
+  onEdit: (task: Task) => void;
+  onDelete: (id: number) => void;
+  onComplete: (id: number) => void;
+  currentUserId: number;
 }
 
 export default function TaskList({
@@ -20,11 +22,18 @@ export default function TaskList({
   processing,
   onEdit,
   onDelete,
-  onClaim,
-  onComplete
-}: Props) {
-  if (loading) return <p className="info">Зареждане...</p>
-  if (error) return <div className="error">{error}</div>
+  onComplete,
+  currentUserId,
+}: TaskListProps) {
+  if (loading) return <p className="info">Зареждане...</p>;
+
+  if (error) {
+    return (
+      <div className="animated-message error show" style={{ margin: "20px 0" }}>
+        {error}
+      </div>
+    );
+  }
 
   return (
     <ul className="task-list">
@@ -38,11 +47,11 @@ export default function TaskList({
             processing={processing}
             onEdit={onEdit}
             onDelete={onDelete}
-            onClaim={onClaim}
             onComplete={onComplete}
+            currentUserId={currentUserId}
           />
         ))
       )}
     </ul>
-  )
+  );
 }
